@@ -15,17 +15,17 @@ const supabase = createClient(
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
 if (!PEXELS_KEY) { console.error('❌ Falta PEXELS_API_KEY en .env'); process.exit(1); }
 
-// ─── Queries para periféricos ──────────────────────────────────────────────
+// ─── Queries para periféricos (estilo profesional: fondo oscuro + RGB/neon) ─
 const PERIPHERAL_QUERIES: Record<string, string[]> = {
-  'Teclados':     ['mechanical gaming keyboard rgb backlit', 'gaming keyboard desk setup'],
-  'Mouse':        ['gaming mouse rgb led desk', 'computer gaming mouse closeup'],
-  'Audífonos':    ['gaming headset headphones rgb', 'wireless gaming headphones'],
-  'Controles':    ['ps5 dualsense controller gaming', 'gaming controller gamepad'],
-  'Monitores':    ['gaming monitor ultrawide curved setup', 'gaming pc monitor rgb'],
-  'Sillas':       ['gaming chair ergonomic desk', 'gaming setup chair'],
-  'Micrófonos':   ['condenser microphone podcast studio', 'streaming microphone desk'],
-  'Webcams':      ['webcam streaming setup desk', 'content creator webcam'],
-  'Alfombrillas': ['gaming mousepad large rgb desk', 'gaming desk mat'],
+  'Teclados':     ['mechanical gaming keyboard rgb dark studio neon', 'keyboard rgb neon dark professional'],
+  'Mouse':        ['gaming mouse rgb dark background neon glow professional', 'gaming mouse neon dark studio'],
+  'Audífonos':    ['gaming headset rgb dark neon purple cyan professional', 'headset gaming dark neon studio'],
+  'Controles':    ['gaming controller dark background neon rgb professional', 'gamepad dark neon studio'],
+  'Monitores':    ['gaming monitor curved dark rgb neon professional', 'curved monitor dark gaming setup'],
+  'Sillas':       ['gaming chair dark background rgb neon professional', 'gaming chair dark studio neon'],
+  'Micrófonos':   ['condenser microphone dark background rgb studio neon', 'microphone dark neon gaming setup'],
+  'Webcams':      ['webcam dark background professional neon studio', 'streaming camera dark setup neon'],
+  'Alfombrillas': ['gaming mousepad large dark rgb neon desk', 'gaming mat dark neon setup'],
 };
 
 // ─── Queries para juegos (por nombre y por género) ─────────────────────────
@@ -118,29 +118,12 @@ async function main() {
   const games      = products.filter(p => p.type === 'game');
   const peripherals = products.filter(p => p.type === 'peripheral');
 
-  console.log(`\n🎮 Actualizando ${games.length} juegos...\n`);
-  const usedGames = new Set<string>();
-  let ok = 0, fail = 0;
+  // Juegos: imágenes ya correctas, no se tocan
+  console.log(`🎮 ${games.length} juegos — imágenes OK, no se modifican\n`);
 
-  for (const p of games) {
-    const catName = (p.categories as { name: string } | null)?.name ?? '';
-    const queries = [
-      ...(GAME_NAME_QUERIES[p.name] ?? []),
-      ...(GAME_GENRE_QUERIES[catName] ?? ['gaming action adventure']),
-    ];
-    process.stdout.write(`  ${p.name}... `);
-    const url = await getBestImage(queries, usedGames);
-    if (url) {
-      await supabase.from('products').update({ image: url }).eq('id', p.id);
-      console.log('✓'); ok++;
-    } else {
-      console.log('⚠'); fail++;
-    }
-    await delay(350);
-  }
-
-  console.log(`\n🎧 Actualizando ${peripherals.length} periféricos...\n`);
+  console.log(`🎧 Actualizando ${peripherals.length} periféricos con estilo gaming profesional...\n`);
   const usedPeriph = new Set<string>();
+  let ok = 0, fail = 0;
 
   for (const p of peripherals) {
     const catName = (p.categories as { name: string } | null)?.name ?? '';
