@@ -1,5 +1,5 @@
 /**
- * Script para actualizar imágenes de productos usando Pexels API.
+ * Actualiza imágenes de productos (juegos + periféricos) usando Pexels API.
  * Uso: npm run update-images
  * Requiere: PEXELS_API_KEY en .env
  */
@@ -13,120 +13,150 @@ const supabase = createClient(
 );
 
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
-if (!PEXELS_KEY) {
-  console.error('❌ Falta PEXELS_API_KEY en .env');
-  process.exit(1);
-}
+if (!PEXELS_KEY) { console.error('❌ Falta PEXELS_API_KEY en .env'); process.exit(1); }
 
-// Queries optimizadas por categoría de periférico
+// ─── Queries para periféricos ──────────────────────────────────────────────
 const PERIPHERAL_QUERIES: Record<string, string[]> = {
-  'Teclados':     ['mechanical gaming keyboard rgb', 'gaming keyboard', 'keyboard gaming'],
-  'Mouse':        ['gaming mouse rgb', 'computer gaming mouse', 'gamer mouse'],
-  'Audífonos':    ['gaming headset', 'headphones gaming', 'gaming headphones wireless'],
-  'Controles':    ['playstation controller ps5', 'gaming controller', 'gamepad controller'],
-  'Monitores':    ['gaming monitor curved ultrawide', 'pc gaming setup monitor', 'gaming monitor rgb'],
-  'Sillas':       ['gaming chair ergonomic', 'gaming chair setup', 'office gaming chair'],
-  'Micrófonos':   ['condenser microphone studio', 'podcast microphone recording', 'streaming microphone'],
-  'Webcams':      ['webcam streaming setup', 'streaming camera desk', 'webcam computer'],
-  'Alfombrillas': ['gaming mousepad large', 'gaming desk mat', 'rgb mousepad'],
+  'Teclados':     ['mechanical gaming keyboard rgb backlit', 'gaming keyboard desk setup'],
+  'Mouse':        ['gaming mouse rgb led desk', 'computer gaming mouse closeup'],
+  'Audífonos':    ['gaming headset headphones rgb', 'wireless gaming headphones'],
+  'Controles':    ['ps5 dualsense controller gaming', 'gaming controller gamepad'],
+  'Monitores':    ['gaming monitor ultrawide curved setup', 'gaming pc monitor rgb'],
+  'Sillas':       ['gaming chair ergonomic desk', 'gaming setup chair'],
+  'Micrófonos':   ['condenser microphone podcast studio', 'streaming microphone desk'],
+  'Webcams':      ['webcam streaming setup desk', 'content creator webcam'],
+  'Alfombrillas': ['gaming mousepad large rgb desk', 'gaming desk mat'],
 };
 
-interface PexelsPhoto {
-  id: number;
-  src: { large: string; large2x: string; original: string };
-  alt: string;
-}
+// ─── Queries para juegos (por nombre y por género) ─────────────────────────
+const GAME_NAME_QUERIES: Record<string, string[]> = {
+  'God of War Ragnarök':          ['nordic mythology warrior axe', 'kratos warrior battle'],
+  'Red Dead Redemption 2':        ['wild west cowboy sunset horse', 'western cowboy landscape'],
+  "Marvel's Spider-Man 2":        ['spiderman city hero action', 'superhero city night'],
+  'Sekiro: Shadows Die Twice':    ['samurai ninja japan sword', 'japanese warrior katana'],
+  'Devil May Cry 5':              ['demon slayer dark fantasy sword', 'stylish action combat'],
+  'The Last of Us Part I':        ['post apocalyptic survivor forest', 'survivor zombie apocalypse'],
+  'Elden Ring':                   ['dark fantasy medieval dragon magic', 'epic fantasy sword battle'],
+  'Cyberpunk 2077':               ['cyberpunk neon city night futuristic', 'neon city dystopia'],
+  "Baldur's Gate 3":              ['fantasy dungeon magic spell', 'dnd fantasy adventure'],
+  'The Witcher 3: Wild Hunt':     ['medieval fantasy forest hunter', 'fantasy RPG sword magic'],
+  'Dark Souls III':               ['dark medieval knight armor', 'dark fantasy warrior armor'],
+  'Persona 5 Royal':              ['tokyo city night neon japan', 'stylish anime city night'],
+  'Hogwarts Legacy':              ['magic wizard castle fantasy', 'hogwarts magic spell castle'],
+  'Counter-Strike 2':             ['military tactical fps shooter', 'special forces tactical gear'],
+  'Apex Legends':                 ['battle royale futuristic soldier', 'sci-fi soldiers combat'],
+  'Helldivers 2':                 ['space marines sci-fi combat', 'military sci-fi shooter'],
+  'Rainbow Six Siege':            ['tactical military breach door', 'special ops tactical'],
+  'PUBG: Battlegrounds':          ['battle royale survival field', 'military parachute jump'],
+  'Hollow Knight':                ['insect underground dark cave', 'dark fantasy underground'],
+  'Hades':                        ['greek mythology underworld fire', 'hades mythology sword'],
+  'Stardew Valley':               ['pixel farm cozy countryside', 'colorful farm sunset'],
+  'Celeste':                      ['mountain climbing pixel platformer', 'colorful pixel adventure'],
+  'GTA V':                        ['los angeles city crime night', 'city streets night urban'],
+  'Forza Horizon 5':              ['sports car racing track speed', 'luxury car sunset road'],
+  'Rocket League':                ['car soccer stadium arena', 'rocket car football arena'],
+  'Gran Turismo 7':               ['race car track motorsport', 'racing car circuit speed'],
+  'Resident Evil Village':        ['horror village dark fog', 'horror castle dark night'],
+  'Alan Wake 2':                  ['horror dark forest mystery night', 'thriller dark atmosphere'],
+  'Horizon Forbidden West':       ['sci-fi open world jungle robot', 'futuristic nature adventure'],
+  'Zelda: Tears of the Kingdom':  ['fantasy adventure link sword', 'fantasy open world nature'],
+  'NBA 2K25':                     ['basketball nba court arena', 'basketball player jumping'],
+  'FIFA 25':                      ['soccer football stadium grass', 'football player kicking'],
+};
 
-interface PexelsResponse {
-  photos: PexelsPhoto[];
-  total_results: number;
-}
+const GAME_GENRE_QUERIES: Record<string, string[]> = {
+  'Acción':   ['action game combat warrior battle', 'action adventure dark'],
+  'RPG':      ['fantasy rpg magic sword adventure', 'epic fantasy world'],
+  'FPS':      ['military fps shooter combat soldier', 'tactical shooter'],
+  'Indie':    ['colorful pixel art indie game', 'indie creative game art'],
+  'Carreras': ['racing car speed track fast', 'race car circuit'],
+  'Aventura': ['adventure exploration open world', 'adventure hero nature'],
+  'Terror':   ['horror dark scary forest fog', 'dark horror atmosphere'],
+  'Deportes': ['sports stadium crowd game', 'sports competition arena'],
+};
+
+// ─── Pexels helpers ────────────────────────────────────────────────────────
+interface PexelsPhoto { id: number; src: { large: string } }
+interface PexelsResp  { photos: PexelsPhoto[] }
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 async function searchPexels(query: string, page = 1): Promise<PexelsPhoto[]> {
   const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&page=${page}&orientation=landscape`;
   const res = await fetch(url, { headers: { Authorization: PEXELS_KEY! } });
-  if (!res.ok) throw new Error(`Pexels error ${res.status}: ${await res.text()}`);
-  const json = await res.json() as PexelsResponse;
+  if (!res.ok) return [];
+  const json = await res.json() as PexelsResp;
   return json.photos ?? [];
 }
 
-function buildPexelsUrl(photo: PexelsPhoto): string {
-  // URL directa de Pexels, optimizada para cards
-  return `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=640&h=427&fit=crop`;
+function pexelsUrl(photo: PexelsPhoto, w = 640, h = 427): string {
+  return `https://images.pexels.com/photos/${photo.id}/pexels-photo-${photo.id}.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${h}&fit=crop`;
 }
 
-async function getBestImage(queries: string[], usedUrls: Set<string>): Promise<string | null> {
-  for (const query of queries) {
-    const photos = await searchPexels(query);
-    const available = photos.filter(p => !usedUrls.has(String(p.id)));
-    if (available.length > 0) {
-      const photo = available[0];
-      usedUrls.add(String(photo.id));
-      return buildPexelsUrl(photo);
+async function getBestImage(queries: string[], used: Set<string>): Promise<string | null> {
+  for (const q of queries) {
+    const photos = await searchPexels(q);
+    const avail  = photos.filter(p => !used.has(String(p.id)));
+    if (avail.length) {
+      used.add(String(avail[0].id));
+      return pexelsUrl(avail[0]);
     }
     await delay(200);
   }
   return null;
 }
 
+// ─── Main ──────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('🔍 Obteniendo productos periféricos...\n');
-
-  const { data: products, error } = await supabase
+  const { data: products } = await supabase
     .from('products')
     .select('id, name, type, categories(name)')
-    .eq('type', 'peripheral')
     .order('name');
 
-  if (error || !products) {
-    console.error('Error al obtener productos:', error?.message);
-    process.exit(1);
-  }
+  if (!products?.length) { console.error('No hay productos'); process.exit(1); }
 
-  console.log(`📦 ${products.length} periféricos encontrados\n`);
+  const games      = products.filter(p => p.type === 'game');
+  const peripherals = products.filter(p => p.type === 'peripheral');
 
-  const usedIds = new Set<string>();
-  let updated = 0;
-  let failed = 0;
+  console.log(`\n🎮 Actualizando ${games.length} juegos...\n`);
+  const usedGames = new Set<string>();
+  let ok = 0, fail = 0;
 
-  for (const product of products) {
-    const catName = (product.categories as { name: string } | null)?.name ?? '';
-    const queries = PERIPHERAL_QUERIES[catName] ?? [catName, 'gaming peripheral'];
-
-    process.stdout.write(`  ${product.name} (${catName})... `);
-
-    try {
-      const imageUrl = await getBestImage(queries, usedIds);
-
-      if (imageUrl) {
-        const { error: updateErr } = await supabase
-          .from('products')
-          .update({ image: imageUrl })
-          .eq('id', product.id);
-
-        if (updateErr) throw updateErr;
-        console.log(`✓`);
-        updated++;
-      } else {
-        console.log(`⚠ sin resultados`);
-        failed++;
-      }
-    } catch (err) {
-      console.log(`✕ error`);
-      console.error(`   ${err}`);
-      failed++;
+  for (const p of games) {
+    const catName = (p.categories as { name: string } | null)?.name ?? '';
+    const queries = [
+      ...(GAME_NAME_QUERIES[p.name] ?? []),
+      ...(GAME_GENRE_QUERIES[catName] ?? ['gaming action adventure']),
+    ];
+    process.stdout.write(`  ${p.name}... `);
+    const url = await getBestImage(queries, usedGames);
+    if (url) {
+      await supabase.from('products').update({ image: url }).eq('id', p.id);
+      console.log('✓'); ok++;
+    } else {
+      console.log('⚠'); fail++;
     }
-
-    // Respetar rate limit de Pexels (200 req/hora en plan gratuito)
-    await delay(400);
+    await delay(350);
   }
 
-  console.log(`\n✅ Actualizados: ${updated} | ⚠ Fallidos: ${failed}\n`);
+  console.log(`\n🎧 Actualizando ${peripherals.length} periféricos...\n`);
+  const usedPeriph = new Set<string>();
+
+  for (const p of peripherals) {
+    const catName = (p.categories as { name: string } | null)?.name ?? '';
+    const queries = PERIPHERAL_QUERIES[catName] ?? [catName, 'gaming peripheral tech'];
+    process.stdout.write(`  ${p.name} (${catName})... `);
+    const url = await getBestImage(queries, usedPeriph);
+    if (url) {
+      await supabase.from('products').update({ image: url }).eq('id', p.id);
+      console.log('✓'); ok++;
+    } else {
+      console.log('⚠'); fail++;
+    }
+    await delay(350);
+  }
+
+  console.log(`\n✅ Actualizados: ${ok} | ⚠ Fallidos: ${fail}\n`);
 }
 
-main().catch(err => {
-  console.error('Error fatal:', err);
-  process.exit(1);
-});
+main().catch(err => { console.error(err); process.exit(1); });
