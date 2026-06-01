@@ -11,6 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
+    "update-images": "tsx scripts/updateImages.ts",
     "vercel-build": "echo ok"
   },
   "dependencies": {
