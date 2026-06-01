@@ -4,10 +4,10 @@ import { CreateCategoryUseCase } from '../../application/use-cases/categories/Cr
 import { UpdateCategoryUseCase } from '../../application/use-cases/categories/UpdateCategoryUseCase';
 import { DeleteCategoryUseCase } from '../../application/use-cases/categories/DeleteCategoryUseCase';
 import { createCategoryDto, updateCategoryDto, paginationDto } from '../../application/dtos/category.dto';
-import { PrismaCategoryRepository } from '../../infrastructure/repositories/PrismaCategoryRepository';
+import { SupabaseCategoryRepository } from '../../infrastructure/repositories/SupabaseCategoryRepository';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
-const repo = new PrismaCategoryRepository();
+const repo = new SupabaseCategoryRepository();
 const getAll = new GetCategoriesUseCase(repo);
 const create = new CreateCategoryUseCase(repo);
 const update = new UpdateCategoryUseCase(repo);

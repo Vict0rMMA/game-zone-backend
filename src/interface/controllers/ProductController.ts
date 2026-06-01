@@ -4,12 +4,12 @@ import { CreateProductUseCase } from '../../application/use-cases/products/Creat
 import { UpdateProductUseCase } from '../../application/use-cases/products/UpdateProductUseCase';
 import { DeleteProductUseCase } from '../../application/use-cases/products/DeleteProductUseCase';
 import { createProductDto, updateProductDto, productQueryDto } from '../../application/dtos/product.dto';
-import { PrismaProductRepository } from '../../infrastructure/repositories/PrismaProductRepository';
-import { PrismaCategoryRepository } from '../../infrastructure/repositories/PrismaCategoryRepository';
+import { SupabaseProductRepository } from '../../infrastructure/repositories/SupabaseProductRepository';
+import { SupabaseCategoryRepository } from '../../infrastructure/repositories/SupabaseCategoryRepository';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
-const productRepo = new PrismaProductRepository();
-const categoryRepo = new PrismaCategoryRepository();
+const productRepo = new SupabaseProductRepository();
+const categoryRepo = new SupabaseCategoryRepository();
 const getAll = new GetProductsUseCase(productRepo);
 const create = new CreateProductUseCase(productRepo, categoryRepo);
 const update = new UpdateProductUseCase(productRepo, categoryRepo);
