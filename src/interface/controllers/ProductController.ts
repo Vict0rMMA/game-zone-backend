@@ -18,8 +18,8 @@ const remove = new DeleteProductUseCase(productRepo);
 export class ProductController {
   static async getAll(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { page, limit, search, categoryId } = productQueryDto.parse(req.query);
-      const result = await getAll.execute(page, limit, { search, categoryId });
+      const { page, limit, search, categoryId, type } = productQueryDto.parse(req.query);
+      const result = await getAll.execute(page, limit, { search, categoryId, type });
       res.json(result);
     } catch (err) { next(err); }
   }

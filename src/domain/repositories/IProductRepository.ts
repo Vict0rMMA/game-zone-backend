@@ -4,6 +4,7 @@ import { PaginationResult } from './ICategoryRepository';
 export interface ProductFilters {
   search?: string;
   categoryId?: string;
+  type?: string;
 }
 
 export interface IProductRepository {

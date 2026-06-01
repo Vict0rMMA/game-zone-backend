@@ -12,6 +12,7 @@ function map(row: Record<string, unknown>): ProductWithCategory {
     price: Number(row.price),
     stock: row.stock as number,
     image: (row.image as string) ?? null,
+    type: (row.type as string) ?? 'game',
     categoryId: row.category_id as string,
     category: cat ? { id: cat.id as string, name: cat.name as string } : { id: '', name: '' },
     createdAt: new Date(row.created_at as string),
@@ -27,6 +28,7 @@ export class SupabaseProductRepository implements IProductRepository {
     let q = supabase.from('products').select(SELECT, { count: 'exact' }).order('created_at', { ascending: false });
     if (filters.search) q = q.ilike('name', `%${filters.search}%`);
     if (filters.categoryId) q = q.eq('category_id', filters.categoryId);
+    if (filters.type) q = q.eq('type', filters.type);
     const { data, count, error } = await q.range(from, from + limit - 1);
     if (error) throw new Error(error.message);
     const total = count ?? 0;
@@ -41,7 +43,8 @@ export class SupabaseProductRepository implements IProductRepository {
   async create(input: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductWithCategory> {
     const { data, error } = await supabase.from('products').insert({
       name: input.name, description: input.description, price: input.price,
-      stock: input.stock, image: input.image ?? null, category_id: input.categoryId,
+      stock: input.stock, image: input.image ?? null, type: input.type ?? 'game',
+      category_id: input.categoryId,
     }).select(SELECT).single();
     if (error) throw new Error(error.message);
     return map(data as Record<string, unknown>);
@@ -55,6 +58,7 @@ export class SupabaseProductRepository implements IProductRepository {
     if (input.stock !== undefined) patch.stock = input.stock;
     if (input.categoryId !== undefined) patch.category_id = input.categoryId;
     if (input.image !== undefined) patch.image = input.image;
+    if (input.type !== undefined) patch.type = input.type;
     const { data, error } = await supabase.from('products').update(patch).eq('id', id).select(SELECT).single();
     if (error) throw new Error(error.message);
     return map(data as Record<string, unknown>);

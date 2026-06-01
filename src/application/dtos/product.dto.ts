@@ -16,6 +16,7 @@ export const productQueryDto = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
   categoryId: z.string().uuid().optional(),
+  type: z.enum(['game', 'peripheral']).optional(),
 });
 
 export type CreateProductDto = z.infer<typeof createProductDto>;

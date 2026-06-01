@@ -16,6 +16,7 @@ export class PrismaProductRepository implements IProductRepository {
     const where: Prisma.ProductWhereInput = {
       ...(filters.search && { name: { contains: filters.search, mode: 'insensitive' } }),
       ...(filters.categoryId && { categoryId: filters.categoryId }),
+      ...(filters.type && { type: filters.type }),
     };
     const [data, total] = await Promise.all([
       prisma.product.findMany({ where, skip, take: limit, include, orderBy: { createdAt: 'desc' } }),

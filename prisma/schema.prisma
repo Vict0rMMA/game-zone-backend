@@ -41,6 +41,8 @@ model Product {
   description String?
   price       Decimal  @db.Decimal(10, 2)
   stock       Int      @default(0)
+  image       String?
+  type        String   @default("game")
   categoryId  String   @map("category_id")
   category    Category @relation(fields: [categoryId], references: [id])
   createdAt   DateTime @default(now()) @map("created_at")
