@@ -5,6 +5,7 @@ export const createProductDto = z.object({
   description: z.string().optional(),
   price: z.number().positive('El precio debe ser mayor a 0'),
   stock: z.number().int().min(0, 'El stock no puede ser negativo'),
+  image: z.string().url().optional(),
   categoryId: z.string().uuid('ID de categoría inválido'),
 });
 

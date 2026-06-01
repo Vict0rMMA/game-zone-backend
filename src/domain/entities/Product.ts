@@ -4,6 +4,7 @@ export interface Product {
   description: string | null;
   price: number;
   stock: number;
+  image: string | null;
   categoryId: string;
   createdAt: Date;
   updatedAt: Date;

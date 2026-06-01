@@ -11,6 +11,7 @@ function map(row: Record<string, unknown>): ProductWithCategory {
     description: (row.description as string) ?? null,
     price: Number(row.price),
     stock: row.stock as number,
+    image: (row.image as string) ?? null,
     categoryId: row.category_id as string,
     category: cat ? { id: cat.id as string, name: cat.name as string } : { id: '', name: '' },
     createdAt: new Date(row.created_at as string),
@@ -40,7 +41,7 @@ export class SupabaseProductRepository implements IProductRepository {
   async create(input: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProductWithCategory> {
     const { data, error } = await supabase.from('products').insert({
       name: input.name, description: input.description, price: input.price,
-      stock: input.stock, category_id: input.categoryId,
+      stock: input.stock, image: input.image ?? null, category_id: input.categoryId,
     }).select(SELECT).single();
     if (error) throw new Error(error.message);
     return map(data as Record<string, unknown>);
@@ -53,6 +54,7 @@ export class SupabaseProductRepository implements IProductRepository {
     if (input.price !== undefined) patch.price = input.price;
     if (input.stock !== undefined) patch.stock = input.stock;
     if (input.categoryId !== undefined) patch.category_id = input.categoryId;
+    if (input.image !== undefined) patch.image = input.image;
     const { data, error } = await supabase.from('products').update(patch).eq('id', id).select(SELECT).single();
     if (error) throw new Error(error.message);
     return map(data as Record<string, unknown>);
