@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Actualiza imágenes de productos (juegos + periféricos) usando Pexels API.
  * Uso: npm run update-images
  * Requiere: PEXELS_API_KEY en .env
@@ -14,8 +14,6 @@ const supabase = createClient(
 
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
 if (!PEXELS_KEY) { console.error('❌ Falta PEXELS_API_KEY en .env'); process.exit(1); }
-
-// ─── Queries para periféricos (estilo profesional: fondo oscuro + RGB/neon) ─
 const PERIPHERAL_QUERIES: Record<string, string[]> = {
   'Teclados':     ['mechanical gaming keyboard rgb dark studio neon', 'keyboard rgb neon dark professional'],
   'Mouse':        ['gaming mouse rgb dark background neon glow professional', 'gaming mouse neon dark studio'],
@@ -27,8 +25,6 @@ const PERIPHERAL_QUERIES: Record<string, string[]> = {
   'Webcams':      ['webcam dark background professional neon studio', 'streaming camera dark setup neon'],
   'Alfombrillas': ['gaming mousepad large dark rgb neon desk', 'gaming mat dark neon setup'],
 };
-
-// ─── Queries para juegos (por nombre y por género) ─────────────────────────
 const GAME_NAME_QUERIES: Record<string, string[]> = {
   'God of War Ragnarök':          ['nordic mythology warrior axe', 'kratos warrior battle'],
   'Red Dead Redemption 2':        ['wild west cowboy sunset horse', 'western cowboy landscape'],
@@ -74,8 +70,6 @@ const GAME_GENRE_QUERIES: Record<string, string[]> = {
   'Terror':   ['horror dark scary forest fog', 'dark horror atmosphere'],
   'Deportes': ['sports stadium crowd game', 'sports competition arena'],
 };
-
-// ─── Pexels helpers ────────────────────────────────────────────────────────
 interface PexelsPhoto { id: number; src: { large: string } }
 interface PexelsResp  { photos: PexelsPhoto[] }
 
@@ -105,8 +99,6 @@ async function getBestImage(queries: string[], used: Set<string>): Promise<strin
   }
   return null;
 }
-
-// ─── Main ──────────────────────────────────────────────────────────────────
 async function main() {
   const { data: products } = await supabase
     .from('products')
