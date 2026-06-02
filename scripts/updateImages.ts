@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Actualiza imágenes de productos (juegos + periféricos) usando Pexels API.
  * Uso: npm run update-images
  * Requiere: PEXELS_API_KEY en .env
@@ -14,72 +14,62 @@ const supabase = createClient(
 
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
 if (!PEXELS_KEY) { console.error('❌ Falta PEXELS_API_KEY en .env'); process.exit(1); }
-
+const PERIPHERAL_QUERIES: Record<string, string[]> = {
+  'Teclados':     ['mechanical gaming keyboard rgb dark studio neon', 'keyboard rgb neon dark professional'],
+  'Mouse':        ['gaming mouse rgb dark background neon glow professional', 'gaming mouse neon dark studio'],
+  'Audífonos':    ['gaming headset rgb dark neon purple cyan professional', 'headset gaming dark neon studio'],
+  'Controles':    ['gaming controller dark background neon rgb professional', 'gamepad dark neon studio'],
+  'Monitores':    ['gaming monitor curved dark rgb neon professional', 'curved monitor dark gaming setup'],
+  'Sillas':       ['gaming chair dark background rgb neon professional', 'gaming chair dark studio neon'],
+  'Micrófonos':   ['condenser microphone dark background rgb studio neon', 'microphone dark neon gaming setup'],
+  'Webcams':      ['webcam dark background professional neon studio', 'streaming camera dark setup neon'],
+  'Alfombrillas': ['gaming mousepad large dark rgb neon desk', 'gaming mat dark neon setup'],
+};
 const GAME_NAME_QUERIES: Record<string, string[]> = {
-  'God of War Ragnarök':                      ['nordic warrior axe mythology battle', 'viking warrior combat'],
-  'Red Dead Redemption 2':                    ['wild west cowboy horse sunset', 'western cowboy landscape'],
-  "Marvel's Spider-Man 2":                    ['superhero city night action hero', 'city skyscraper night hero'],
-  'Sekiro: Shadows Die Twice':                ['samurai katana japan sword warrior', 'japanese ninja warrior'],
-  'Devil May Cry 5':                          ['dark fantasy demon sword combat', 'action combat warrior dark'],
-  'The Last of Us Part I':                    ['post apocalyptic survivor ruins forest', 'abandoned city nature reclaim'],
-  'Elden Ring':                               ['dark fantasy dragon magic epic', 'epic medieval battle dragon'],
-  'Cyberpunk 2077':                           ['neon city night cyberpunk futuristic', 'neon lights urban night'],
-  "Baldur's Gate 3":                          ['fantasy dungeon magic adventure', 'dnd fantasy castle magic'],
-  'The Witcher 3: Wild Hunt':                 ['medieval forest hunter magic sword', 'fantasy RPG sword battle'],
-  'Dark Souls III':                           ['dark medieval knight armor battle', 'dark warrior armor dungeon'],
-  'Persona 5 Royal':                          ['tokyo night neon city japan', 'anime stylish city night'],
-  'Hogwarts Legacy':                          ['magic castle fantasy wizard spell', 'magic library castle fantasy'],
-  'Counter-Strike 2':                         ['military tactical special forces', 'soldiers tactical gear urban'],
-  'Apex Legends':                             ['sci-fi soldiers futuristic combat', 'battle royale futuristic soldier'],
-  'Helldivers 2':                             ['space marines sci-fi war battle', 'military sci-fi armored soldier'],
-  'Rainbow Six Siege':                        ['tactical military breach hostage', 'special ops team urban'],
-  'Hollow Knight':                            ['underground cave dark fantasy insect', 'dark cave adventure underground'],
-  'Hades':                                    ['greek mythology underworld fire dark', 'mythology sword fire battle'],
-  'Stardew Valley':                           ['cozy farm countryside sunny green', 'farm landscape sunset colorful'],
-  'Celeste':                                  ['mountain climbing pixel colorful adventure', 'mountain top adventure colorful'],
-  'GTA V':                                    ['city crime night urban skyline', 'urban city night heist'],
-  'Forza Horizon 5':                          ['luxury sports car racing speed road', 'supercar race track speed'],
-  'Rocket League':                            ['soccer arena stadium sport car', 'car soccer sport stadium'],
-  'Gran Turismo 7':                           ['race car circuit motorsport track', 'racing car formula speed'],
-  'Resident Evil Village':                    ['horror village fog dark castle', 'dark gothic horror village'],
-  'Alan Wake 2':                              ['dark forest mystery thriller night', 'horror forest dark atmosphere'],
-  'The Legend of Zelda: Tears of the Kingdom': ['fantasy adventure link hero sword', 'open world fantasy nature hero'],
-  'Horizon Forbidden West':                   ['sci-fi nature robot jungle adventure', 'futuristic wildlife open world'],
-  'NBA 2K25':                                 ['basketball court arena nba sport', 'basketball player slam dunk'],
-  'FIFA 25':                                  ['football soccer stadium grass sport', 'soccer player stadium crowd'],
-  'Palworld':                                 ['creature adventure fantasy colorful open', 'colorful fantasy creature world'],
-  'Starfield':                                ['space exploration galaxy stars universe', 'space station astronaut stars'],
-  'CoD Warzone':                              ['military combat zone battle urban', 'special forces combat night'],
-  'Rust':                                     ['survival wilderness nature campfire', 'survival forest base building'],
-  'Terraria':                                 ['pixel adventure colorful underground', 'pixel art exploration adventure'],
-  'Resident Evil 4 Remake':                   ['horror village dark fog mystery', 'horror game dark forest night'],
-  'Destiny 2':                                ['space fantasy sci-fi guardian warrior', 'sci-fi hero space battle'],
-  'Warframe':                                 ['sci-fi ninja warrior armor futuristic', 'futuristic ninja combat dark'],
+  'God of War Ragnarök':          ['nordic mythology warrior axe', 'kratos warrior battle'],
+  'Red Dead Redemption 2':        ['wild west cowboy sunset horse', 'western cowboy landscape'],
+  "Marvel's Spider-Man 2":        ['spiderman city hero action', 'superhero city night'],
+  'Sekiro: Shadows Die Twice':    ['samurai ninja japan sword', 'japanese warrior katana'],
+  'Devil May Cry 5':              ['demon slayer dark fantasy sword', 'stylish action combat'],
+  'The Last of Us Part I':        ['post apocalyptic survivor forest', 'survivor zombie apocalypse'],
+  'Elden Ring':                   ['dark fantasy medieval dragon magic', 'epic fantasy sword battle'],
+  'Cyberpunk 2077':               ['cyberpunk neon city night futuristic', 'neon city dystopia'],
+  "Baldur's Gate 3":              ['fantasy dungeon magic spell', 'dnd fantasy adventure'],
+  'The Witcher 3: Wild Hunt':     ['medieval fantasy forest hunter', 'fantasy RPG sword magic'],
+  'Dark Souls III':               ['dark medieval knight armor', 'dark fantasy warrior armor'],
+  'Persona 5 Royal':              ['tokyo city night neon japan', 'stylish anime city night'],
+  'Hogwarts Legacy':              ['magic wizard castle fantasy', 'hogwarts magic spell castle'],
+  'Counter-Strike 2':             ['military tactical fps shooter', 'special forces tactical gear'],
+  'Apex Legends':                 ['battle royale futuristic soldier', 'sci-fi soldiers combat'],
+  'Helldivers 2':                 ['space marines sci-fi combat', 'military sci-fi shooter'],
+  'Rainbow Six Siege':            ['tactical military breach door', 'special ops tactical'],
+  'PUBG: Battlegrounds':          ['battle royale survival field', 'military parachute jump'],
+  'Hollow Knight':                ['insect underground dark cave', 'dark fantasy underground'],
+  'Hades':                        ['greek mythology underworld fire', 'hades mythology sword'],
+  'Stardew Valley':               ['pixel farm cozy countryside', 'colorful farm sunset'],
+  'Celeste':                      ['mountain climbing pixel platformer', 'colorful pixel adventure'],
+  'GTA V':                        ['los angeles city crime night', 'city streets night urban'],
+  'Forza Horizon 5':              ['sports car racing track speed', 'luxury car sunset road'],
+  'Rocket League':                ['car soccer stadium arena', 'rocket car football arena'],
+  'Gran Turismo 7':               ['race car track motorsport', 'racing car circuit speed'],
+  'Resident Evil Village':        ['horror village dark fog', 'horror castle dark night'],
+  'Alan Wake 2':                  ['horror dark forest mystery night', 'thriller dark atmosphere'],
+  'Horizon Forbidden West':       ['sci-fi open world jungle robot', 'futuristic nature adventure'],
+  'Zelda: Tears of the Kingdom':  ['fantasy adventure link sword', 'fantasy open world nature'],
+  'NBA 2K25':                     ['basketball nba court arena', 'basketball player jumping'],
+  'FIFA 25':                      ['soccer football stadium grass', 'football player kicking'],
 };
 
 const GAME_GENRE_QUERIES: Record<string, string[]> = {
-  'Acción':   ['action combat warrior battle dark', 'action hero sword battle'],
-  'RPG':      ['fantasy RPG magic sword adventure', 'epic fantasy dungeon magic'],
-  'FPS':      ['military shooter combat soldier', 'tactical shooter special forces'],
-  'Indie':    ['colorful indie art adventure pixel', 'creative indie game landscape'],
-  'Carreras': ['racing car speed track circuit', 'supercar race speed road'],
-  'Aventura': ['adventure exploration open world nature', 'hero adventure landscape'],
-  'Terror':   ['horror dark forest fog night', 'dark horror atmosphere spooky'],
-  'Deportes': ['sports stadium crowd competition', 'sport arena action crowd'],
+  'Acción':   ['action game combat warrior battle', 'action adventure dark'],
+  'RPG':      ['fantasy rpg magic sword adventure', 'epic fantasy world'],
+  'FPS':      ['military fps shooter combat soldier', 'tactical shooter'],
+  'Indie':    ['colorful pixel art indie game', 'indie creative game art'],
+  'Carreras': ['racing car speed track fast', 'race car circuit'],
+  'Aventura': ['adventure exploration open world', 'adventure hero nature'],
+  'Terror':   ['horror dark scary forest fog', 'dark horror atmosphere'],
+  'Deportes': ['sports stadium crowd game', 'sports competition arena'],
 };
-
-const PERIPHERAL_QUERIES: Record<string, string[]> = {
-  'Teclados':     ['mechanical gaming keyboard rgb neon dark', 'keyboard rgb neon black studio'],
-  'Mouse':        ['gaming mouse rgb dark neon background', 'gaming mouse neon glow dark'],
-  'Audífonos':    ['gaming headset rgb neon dark purple', 'headphone gaming neon dark'],
-  'Controles':    ['gaming controller neon dark background', 'gamepad neon dark studio'],
-  'Monitores':    ['gaming monitor curved rgb dark setup', 'curved monitor dark gaming'],
-  'Sillas':       ['gaming chair rgb neon dark background', 'gaming chair dark studio'],
-  'Micrófonos':   ['condenser microphone dark studio neon', 'microphone streaming dark neon'],
-  'Webcams':      ['webcam streaming dark professional neon', 'camera streaming dark setup'],
-  'Alfombrillas': ['gaming mousepad large dark neon desk', 'gaming mat dark neon'],
-};
-
 interface PexelsPhoto { id: number; src: { large: string } }
 interface PexelsResp  { photos: PexelsPhoto[] }
 
@@ -105,21 +95,10 @@ async function getBestImage(queries: string[], used: Set<string>): Promise<strin
       used.add(String(avail[0].id));
       return pexelsUrl(avail[0]);
     }
-    await delay(250);
-  }
-  // Segunda vuelta con página 2
-  for (const q of queries) {
-    const photos = await searchPexels(q, 2);
-    const avail  = photos.filter(p => !used.has(String(p.id)));
-    if (avail.length) {
-      used.add(String(avail[0].id));
-      return pexelsUrl(avail[0]);
-    }
-    await delay(250);
+    await delay(200);
   }
   return null;
 }
-
 async function main() {
   const { data: products } = await supabase
     .from('products')
@@ -128,34 +107,15 @@ async function main() {
 
   if (!products?.length) { console.error('No hay productos'); process.exit(1); }
 
-  const games       = products.filter(p => p.type === 'game');
+  const games      = products.filter(p => p.type === 'game');
   const peripherals = products.filter(p => p.type === 'peripheral');
 
-  // ── JUEGOS ──────────────────────────────────────────────────────────────
-  console.log(`\n🎮 Actualizando ${games.length} juegos con imágenes únicas...\n`);
-  const usedGames = new Set<string>();
-  let okG = 0, failG = 0;
+  // Juegos: imágenes ya correctas, no se tocan
+  console.log(`🎮 ${games.length} juegos — imágenes OK, no se modifican\n`);
 
-  for (const p of games) {
-    const catName = (p.categories as { name: string } | null)?.name ?? '';
-    const specific = GAME_NAME_QUERIES[p.name];
-    const genre    = GAME_GENRE_QUERIES[catName] ?? ['gaming adventure action colorful'];
-    const queries  = specific ? specific : genre;
-    process.stdout.write(`  ${p.name}... `);
-    const url = await getBestImage(queries, usedGames);
-    if (url) {
-      await supabase.from('products').update({ image: url }).eq('id', p.id);
-      console.log('✓'); okG++;
-    } else {
-      console.log('⚠ sin imagen'); failG++;
-    }
-    await delay(400);
-  }
-
-  // ── PERIFÉRICOS ─────────────────────────────────────────────────────────
-  console.log(`\n🎧 Actualizando ${peripherals.length} periféricos...\n`);
+  console.log(`🎧 Actualizando ${peripherals.length} periféricos con estilo gaming profesional...\n`);
   const usedPeriph = new Set<string>();
-  let okP = 0, failP = 0;
+  let ok = 0, fail = 0;
 
   for (const p of peripherals) {
     const catName = (p.categories as { name: string } | null)?.name ?? '';
@@ -164,15 +124,14 @@ async function main() {
     const url = await getBestImage(queries, usedPeriph);
     if (url) {
       await supabase.from('products').update({ image: url }).eq('id', p.id);
-      console.log('✓'); okP++;
+      console.log('✓'); ok++;
     } else {
-      console.log('⚠ sin imagen'); failP++;
+      console.log('⚠'); fail++;
     }
-    await delay(400);
+    await delay(350);
   }
 
-  console.log(`\n✅ Juegos: ${okG} OK, ${failG} fallidos`);
-  console.log(`✅ Periféricos: ${okP} OK, ${failP} fallidos\n`);
+  console.log(`\n✅ Actualizados: ${ok} | ⚠ Fallidos: ${fail}\n`);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });

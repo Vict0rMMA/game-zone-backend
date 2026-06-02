@@ -3,10 +3,9 @@ import { z } from 'zod';
 export const createProductDto = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
   description: z.string().optional(),
-  price: z.number().min(0, 'El precio no puede ser negativo'),
+  price: z.number().positive('El precio debe ser mayor a 0'),
   stock: z.number().int().min(0, 'El stock no puede ser negativo'),
-  image: z.string().url().optional().or(z.literal('')).transform(v => v || undefined),
-  type: z.enum(['game', 'peripheral']).default('game'),
+  image: z.string().url().optional(),
   categoryId: z.string().uuid('ID de categoría inválido'),
 });
 
